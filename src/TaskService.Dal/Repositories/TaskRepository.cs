@@ -6,9 +6,9 @@ namespace TaskService.Dal.Repositories;
 
 public class TaskRepository : ITaskRepository
 {
-    private readonly AppDbContext _context;
+    private readonly TaskDbContext _context;
 
-    public TaskRepository(AppDbContext context)
+    public TaskRepository(TaskDbContext context)
     {
         _context = context;
     }

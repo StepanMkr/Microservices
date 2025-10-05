@@ -13,6 +13,8 @@
   <ItemGroup>
     <ProjectReference Include="..\TaskService.Logic\TaskService.Logic.csproj" />
     <ProjectReference Include="..\CoreLib\CoreLib.csproj" />
+    <ProjectReference Include="..\TaskService.Application\TaskService.Application.csproj" />
+    <ProjectReference Include="..\TaskService.Infrastructure\TaskService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
