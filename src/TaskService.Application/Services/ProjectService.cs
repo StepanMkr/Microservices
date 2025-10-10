@@ -1,8 +1,9 @@
-using CoreLib.DTOs;
-using CoreLib.Entities;
-using CoreLib.Interfaces;
+using TaskService.Application.Interfaces;
+using TaskService.Domain.DTOs;
+using TaskService.Domain.Entities;
+using TaskService.Domain.Interfaces;
 
-namespace TaskService.Logic.Services;
+namespace TaskService.Application.Services;
 
 public class ProjectService : IProjectService
 {
@@ -15,12 +16,11 @@ public class ProjectService : IProjectService
 
     public async Task<ProjectDto> CreateProjectAsync(CreateProjectDto dto)
     {
-        var project = new ProjectEntity
+        var project = new Project
         {
             Name = dto.Name,
             Description = dto.Description,
-            OwnerId = dto.OwnerId,
-            IsArchived = false
+            OwnerId = dto.OwnerId
         };
 
         var created = await _projectRepository.AddAsync(project);
@@ -61,7 +61,7 @@ public class ProjectService : IProjectService
         return true;
     }
 
-    private static ProjectDto MapToDto(ProjectEntity project) => new ProjectDto
+    private static ProjectDto MapToDto(Project project) => new()
     {
         Id = project.Id,
         Name = project.Name,

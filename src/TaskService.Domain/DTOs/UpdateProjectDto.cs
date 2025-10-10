@@ -1,4 +1,4 @@
-namespace CoreLib.DTOs;
+namespace TaskService.Domain.DTOs;
 
 public class UpdateProjectDto
 {

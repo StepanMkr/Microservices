@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TaskService.Dal;
 
-public class AppDbContext : DbContext
+public class TaskDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public TaskDbContext(DbContextOptions<TaskDbContext> options) : base(options) { }
 
     public DbSet<TaskEntity> Tasks { get; set; }
     public DbSet<TaskStatusLog> TaskStatusLogs { get; set; }

@@ -1,6 +1,6 @@
-using CoreLib.DTOs;
+using TaskService.Domain.DTOs;
 
-namespace CoreLib.Interfaces;
+namespace TaskService.Application.Interfaces;
 
 public interface IProjectService
 {

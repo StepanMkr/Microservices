@@ -1,33 +1,33 @@
-using CoreLib.Entities;
-using CoreLib.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using TaskService.Domain.Entities;
+using TaskService.Domain.Interfaces;
 
-namespace TaskService.Dal.Repositories;
+namespace TaskService.Infrastructure.Persistence;
 
 public class ProjectRepository : IProjectRepository
 {
-    private readonly AppDbContext _context;
+    private readonly ProjectDbContext _context;
 
-    public ProjectRepository(AppDbContext context)
+    public ProjectRepository(ProjectDbContext context)
     {
         _context = context;
     }
 
-    public async Task<ProjectEntity> AddAsync(ProjectEntity project)
+    public async Task<Project> AddAsync(Project project)
     {
         _context.Projects.Add(project);
         await _context.SaveChangesAsync();
         return project;
     }
 
-    public async Task<ProjectEntity?> GetByIdAsync(int id)
+    public async Task<Project?> GetByIdAsync(int id)
     {
         return await _context.Projects
             .Include(p => p.Tasks)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<IEnumerable<ProjectEntity>> GetAllAsync(int? ownerId, int page, int pageSize)
+    public async Task<IEnumerable<Project>> GetAllAsync(int? ownerId, int page, int pageSize)
     {
         var query = _context.Projects.AsQueryable();
 
@@ -40,13 +40,13 @@ public class ProjectRepository : IProjectRepository
             .ToListAsync();
     }
 
-    public async Task UpdateAsync(ProjectEntity project)
+    public async Task UpdateAsync(Project project)
     {
         _context.Projects.Update(project);
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(ProjectEntity project)
+    public async Task DeleteAsync(Project project)
     {
         _context.Projects.Remove(project);
         await _context.SaveChangesAsync();

@@ -1,6 +1,6 @@
-using CoreLib.DTOs;
-using CoreLib.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using TaskService.Application.Interfaces;
+using TaskService.Domain.DTOs;
 
 namespace TaskService.Api.Controllers;
 
