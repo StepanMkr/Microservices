@@ -1,0 +1,14 @@
+using CoreLib.HttpService.Services.Models;
+
+namespace CoreLib.HttpService.Services.Interfaces;
+
+/// <summary>
+/// Отправка HTTP запросов и обработка ответов
+/// </summary>
+public interface IHttpRequestService
+{
+    /// <summary>
+    /// Отправить HTTP-запрос
+    /// </summary>
+    Task<HttpResponse<TResponse>> SendRequestAsync<TResponse>(HttpRequestData requestData, HttpConnectionData connectionData = default);
+}
