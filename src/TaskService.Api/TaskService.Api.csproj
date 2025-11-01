@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.5.5" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
   </ItemGroup>
@@ -16,6 +18,7 @@
     <ProjectReference Include="..\CoreLib\CoreLib.csproj" />
     <ProjectReference Include="..\TaskService.Application\TaskService.Application.csproj" />
     <ProjectReference Include="..\TaskService.Infrastructure\TaskService.Infrastructure.csproj" />
+    <ProjectReference Include="..\Libs\SagaInterfaces\SagaInterfaces\SagaInterfaces.csproj" />
   </ItemGroup>
 
 </Project>
