@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using TaskService.Infrastructure;
 using TaskService.Infrastructure.Persistence;
+using TaskService.Api.Consumers.Choreography;
+using TaskService.Api.Consumers.Orchestration;
 using TaskService.Dal;
 using CoreLib.Interfaces;
 using TaskService.Logic.Services;
@@ -8,6 +10,7 @@ using TaskService.Application.Interfaces;
 using TaskService.Application.Services;
 using Serilog;
 using CoreLib.TraceId;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +49,36 @@ builder.Services.AddInfrastructure();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<BlockCardConsumer>();
+    x.AddConsumer<ActivateCardConsumer>();
+
+    x.AddConsumer<ActivationInitiatedConsumer>();
+    x.AddConsumer<ActivationConfirmedConsumer>();
+
+    x.SetKebabCaseEndpointNameFormatter();
+
+    x.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host("localhost", "/", h => { h.Username("test"); h.Password("test"); });
+
+        cfg.ReceiveEndpoint("block-card", e =>
+        {
+            e.UseInMemoryOutbox(ctx);
+            e.ConfigureConsumer<BlockCardConsumer>(ctx);
+        });
+
+        cfg.ReceiveEndpoint("activate-card", e =>
+        {
+            e.UseInMemoryOutbox(ctx);
+            e.ConfigureConsumer<ActivateCardConsumer>(ctx);
+        });
+
+        cfg.ConfigureEndpoints(ctx);
+    });
+});
 
 var app = builder.Build();
 
