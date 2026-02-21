@@ -5,6 +5,12 @@
     <ProjectReference Include="..\CoreLib\CoreLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+      <Reference Include="CoreLib">
+          <HintPath>..\CoreLib\bin\Debug\net8.0\CoreLib.dll</HintPath>
+      </Reference>
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

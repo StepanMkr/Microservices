@@ -4,6 +4,7 @@ using TaskService.Infrastructure.Persistence;
 using TaskService.Api.Consumers.Choreography;
 using TaskService.Api.Consumers.Orchestration;
 using TaskService.Dal;
+using CoreLib.DistributedSync.Redis;
 using CoreLib.Interfaces;
 using TaskService.Logic.Services;
 using TaskService.Application.Interfaces;
@@ -49,6 +50,8 @@ builder.Services.AddInfrastructure();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddRedisDistributedSync(builder.Configuration);
 
 builder.Services.AddMassTransit(x =>
 {

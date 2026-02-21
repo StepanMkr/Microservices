@@ -1,3 +1,4 @@
+using CoreLib.DistributedSync.Abstractions;
 using CoreLib.DTOs;
 using CoreLib.Entities;
 using CoreLib.Interfaces;
@@ -7,29 +8,35 @@ namespace TaskService.Logic.Services;
 public class TaskService : ITaskService
 {
     private readonly ITaskRepository _taskRepository;
+    private readonly IDistributedSemaphoreFactory _semFactory;
 
-    public TaskService(ITaskRepository taskRepository)
+    public TaskService(ITaskRepository taskRepository, IDistributedSemaphoreFactory semFactory)
     {
         _taskRepository = taskRepository;
+        _semFactory = semFactory;
     }
 
     public async Task<TaskDto> CreateTaskAsync(CreateTaskDto dto)
     {
-        var task = new TaskEntity
+        var distributedSemaphore = _semFactory.Create($"project:{dto.ProjectId}:tasks:create:sem", 1, TimeSpan.FromSeconds(30));
+        await using (await distributedSemaphore.AcquireAsync(TimeSpan.FromSeconds(2)))
         {
-            Title = dto.Title,
-            Description = dto.Description,
-            ProjectId = dto.ProjectId,
-            AssigneeId = dto.AssigneeId,
-            ReporterId = 1, // TODO: получать из контекста пользователя
-            Status = "New",
-            Priority = dto.Priority ?? "Medium",
-            CreatedAt = DateTime.UtcNow,
-            DueDate = dto.DueDate
-        };
+            var task = new TaskEntity
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                ProjectId = dto.ProjectId,
+                AssigneeId = dto.AssigneeId,
+                ReporterId = 1, 
+                Status = "New",
+                Priority = dto.Priority ?? "Medium",
+                CreatedAt = DateTime.UtcNow,
+                DueDate = dto.DueDate
+            };
 
-        var created = await _taskRepository.AddAsync(task);
-        return MapToDto(created);
+            var created = await _taskRepository.AddAsync(task);
+            return MapToDto(created);
+        }
     }
 
     public async Task<TaskDto?> GetTaskByIdAsync(int id)
@@ -62,35 +69,52 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto?> ChangeStatusAsync(int id, ChangeStatusDto dto)
     {
-        var task = await _taskRepository.GetByIdAsync(id);
-        if (task == null) return null;
-
-        var oldStatus = task.Status;
-        task.Status = dto.NewStatus;
-
-        // логируем изменение статуса
-        var log = new TaskStatusLog
+        var distributedSemaphore = _semFactory.Create($"task:{id}:sem", 1, TimeSpan.FromSeconds(30));
+        await using (await distributedSemaphore.AcquireAsync(TimeSpan.FromSeconds(2)))
         {
-            TaskId = task.Id,
-            OldStatus = oldStatus,
-            NewStatus = dto.NewStatus,
-            ChangedByUserId = 1, // TODO: брать текущего пользователя
-            ChangedAt = DateTime.UtcNow
-        };
+            var task = await _taskRepository.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException($"Task {id} not found.");
 
-        await _taskRepository.UpdateAsync(task);
-        await _taskRepository.AddStatusLogAsync(log);
+            if (task.Status == "Closed" && dto.NewStatus != "Reopened")
+            {
+                throw new InvalidOperationException($"Task {id} is closed and cannot change status to {dto.NewStatus}.");
+            }
 
-        return MapToDto(task);
+            var oldStatus = task.Status;
+            task.Status = dto.NewStatus;
+
+            var log = new TaskStatusLog
+            {
+                TaskId = task.Id,
+                OldStatus = oldStatus,
+                NewStatus = dto.NewStatus,
+                ChangedByUserId = 1, 
+                ChangedAt = DateTime.UtcNow
+            };
+
+            await _taskRepository.UpdateAsync(task);
+            await _taskRepository.AddStatusLogAsync(log);
+
+            return MapToDto(task);
+        }
     }
 
     public async Task<bool> DeleteTaskAsync(int id)
     {
-        var task = await _taskRepository.GetByIdAsync(id);
-        if (task == null) return false;
+        var distributedSemaphore = _semFactory.Create($"task:{id}:sem", 1, TimeSpan.FromSeconds(30));
+        await using (await distributedSemaphore.AcquireAsync(TimeSpan.FromSeconds(2)))
+        {
+            var task = await _taskRepository.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException($"Task {id} not found.");
 
-        await _taskRepository.DeleteAsync(task);
-        return true;
+            if (task.Status is "InProgress" or "Closed")
+            {
+                throw new InvalidOperationException($"Task {id} in status '{task.Status}' cannot be deleted.");
+            }
+
+            await _taskRepository.DeleteAsync(task);
+            return true;
+        }
     }
 
     private static TaskDto MapToDto(TaskEntity task) => new TaskDto
